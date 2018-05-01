@@ -12,15 +12,14 @@
 #include "helper_functions.h"
 
 struct Particle {
-
 	int id;
 	double x;
 	double y;
 	double theta;
 	double weight;
-	std::vector<int> associations;
-	std::vector<double> sense_x;
-	std::vector<double> sense_y;
+	std::vector<int> associations; // landmark ids correspond to sense_x and sense_y
+	std::vector<double> sense_x; // in map coordinates
+	std::vector<double> sense_y; // in map coordinates
 };
 
 
@@ -29,14 +28,12 @@ class ParticleFilter {
 	
 	// Number of particles to draw
 	int num_particles; 
-	
-	
-	
+
+	// weight vector: weight for each particle
+	std::vector<double> weights;
+
 	// Flag, if filter is initialized
 	bool is_initialized;
-	
-	// Vector of weights of all particles
-	std::vector<double> weights;
 	
 public:
 	
@@ -73,14 +70,6 @@ public:
 	void prediction(double delta_t, double std_pos[], double velocity, double yaw_rate);
 	
 	/**
-	 * dataAssociation Finds which observations correspond to which landmarks (likely by using
-	 *   a nearest-neighbors data association).
-	 * @param predicted Vector of predicted landmark observations
-	 * @param observations Vector of landmark observations
-	 */
-	void dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations);
-	
-	/**
 	 * updateWeights Updates the weights for each particle based on the likelihood of the 
 	 *   observed measurements. 
 	 * @param sensor_range Range [m] of sensor
@@ -97,14 +86,6 @@ public:
 	 */
 	void resample();
 
-	/*
-	 * Set a particles list of associations, along with the associations calculated world x,y coordinates
-	 * This can be a very useful debugging tool to make sure transformations are correct and assocations correctly connected
-	 */
-	Particle SetAssociations(Particle& particle, const std::vector<int>& associations,
-		                     const std::vector<double>& sense_x, const std::vector<double>& sense_y);
-
-	
 	std::string getAssociations(Particle best);
 	std::string getSenseX(Particle best);
 	std::string getSenseY(Particle best);
@@ -115,6 +96,26 @@ public:
 	const bool initialized() const {
 		return is_initialized;
 	}
+
+private:	
+	/**
+	 * dataAssociation finds which observations correspond to which landmarks by using
+	 *   a nearest-neighbors data association.
+	 * @param observations Vector of landmark observations, in VEHICLE coordinates
+	 * @param p Particle: whose sense_x and sense_y we associate the observations with
+	 * returns vector that orders the observations cooresponding to the sensed landmarks by the particles
+	 * in MAP coordinates
+	 */
+	std::vector<LandmarkObs> dataAssociation(const std::vector<LandmarkObs>& observations, Particle p);
+		
+	/** 
+	* sense the location of all the map landmarks for each particle, 
+	* 	and set sense_x and sense_y of the particles in MAP coordinates.
+	* @param sensor_range Range [m] of sensor. Only landmarks within this range
+	*	will be sensed.
+	* @param map Map class containing map landmarks
+	*/
+	void sense(double sensor_range, const Map &map_landmarks);
 };
 
 

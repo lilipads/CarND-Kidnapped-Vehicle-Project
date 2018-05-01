@@ -58,6 +58,15 @@ inline double dist(double x1, double y1, double x2, double y2) {
 	return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 }
 
+/*
+ * Given a multivariate gaussian with specified mean and std, calculate the likelikhood of sampling x and y
+ */ 
+inline double multi_norm_pdf(double x, double y, double mean_x, double mean_y, double std_x, double std_y){
+	double exponent= pow(x - mean_x, 2) / (2 * pow(std_x, 2)) + pow(y - mean_y, 2) / (2 * pow(std_y, 2));
+	double probability = 1.0 / (2 * M_PI * std_x * std_y) * exp(-exponent);
+	return probability;
+}
+
 inline double * getError(double gt_x, double gt_y, double gt_theta, double pf_x, double pf_y, double pf_theta) {
 	static double error[3];
 	error[0] = fabs(pf_x - gt_x);
